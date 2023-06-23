@@ -2,6 +2,8 @@ import os
 import re
 import argparse
 import sys
+from porterStemmer import PorterStemmer
+
 
 def second_search(text,str):
   list_1=[m.start() for m in re.finditer(fr'\b{str}\b',text)] #used fr to combine variable in the raw string
@@ -51,9 +53,16 @@ def extract_collection(chapters_text, chapters_list_final):
         create_file(chapters_text[i-1],chapters_list_final[i-1],str(i).zfill(2))
     
 
-def linear_search(chapter_name,count,query, model, search_mode, documents):
-    query = query.lower()
+def search_collection(chapter_name,count,query, model, search_mode, documents, stemming):
+    query = query.lower() #changes the query to lower case characters    
     chapter_name_underscore = chapter_name.replace(" ","_").lower().replace(',','').replace("'",'')  # Lower case as well as with underscore
+    
+    
+    if stemming is True:
+        obj_word = PorterStemmer()
+        #print(obj_word.stem(query)) #code to test of function works or not.
+    
+    
     
     if documents == 'original':
         file_name=os.path.abspath(f'collection_original/{count}_{chapter_name_underscore}.txt')
@@ -101,6 +110,7 @@ if __name__ == '__main__':
     parser.add_argument("-q","--query",dest="query")
     parser.add_argument("-m","--model", dest="model")
     parser.add_argument("-d","--documents", dest="documents")
+    parser.add_argument("-r","--stemming", dest="stemming", action='store_true')
     args = parser.parse_args()
     
     try:
@@ -144,4 +154,4 @@ if __name__ == '__main__':
         extract_collection(chapters_text, chapters_list_final)
     if args.query is not None:
         for i in range(1,len(chapters_list_final)+1):
-            linear_search(chapters_list_final[i-1],str(i).zfill(2), query=args.query, model=args.model, search_mode=args.search_mode, documents=args.documents)
+            search_collection(chapters_list_final[i-1],str(i).zfill(2), query=args.query, model=args.model, search_mode=args.search_mode, documents=args.documents, stemming=args.stemming)
