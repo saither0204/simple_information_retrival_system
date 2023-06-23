@@ -12,6 +12,21 @@ def second_search(text,str):
   else:
     return list_1[1]
 
+
+def cleaning_text(file_name):
+    with open(file_name, 'r', encoding = 'utf-8') as file_text:
+        text = file_text.read()
+        text = text.replace('"', '')
+        text = text.replace('\n', ' ')
+        text = text.replace(',', '')
+        text = text.replace('.', '')
+        text = text.replace(';', '')
+        text = text.replace(':', '')
+        text = text.replace('?', '')
+        text = text.replace('!', '')
+    return text
+
+
 def create_file(data, chapter_name,count):
     ST_file_path = os.path.abspath("englishST.txt")
     
@@ -28,29 +43,54 @@ def create_file(data, chapter_name,count):
         
         
         with open(file_name, 'r', encoding = 'utf-8') as file_text:
+            text = cleaning_text(file_name_ST)
+            words = text.split(' ')
+            filtered_words = []
+            for word in words:    
+                if word.lower() not in stop_words:
+                    filtered_words.append(word)
+            s = ' '.join(filtered_words)
             with open(file_name_ST, 'w', encoding='utf-8') as file_st:
-                text = file_text.read()
-                text = text.replace('"', '')
-                text = text.replace('\n', ' ')
-                text = text.replace(',', '')
-                text = text.replace('.', '')
-                text = text.replace(';', '')
-                text = text.replace(':', '')
-                text = text.replace('?', '')
-                text = text.replace('!', '')
-                words = text.split(' ')
-                filtered_words = []
-                for word in words:    
-                    if word.lower() not in stop_words:
-                        filtered_words.append(word)
-                s = ' '.join(filtered_words)
                 file_st.write(s)
         
         
-
 def extract_collection(chapters_text, chapters_list_final):
     for i in range(1,len(chapters_text)+1):
         create_file(chapters_text[i-1],chapters_list_final[i-1],str(i).zfill(2))
+        
+        
+def print_title(chapter_name_underscore, count):
+    to_print = f'{count}_{chapter_name_underscore}.txt'
+    print(to_print, file=sys.stdout)
+        
+
+def search_original(chapter_name_underscore, count, query):
+    file_name=os.path.abspath(f'collection_original/{count}_{chapter_name_underscore}.txt')
+    text = cleaning_text(file_name)
+    words = text.split(' ')
+    flag = 0
+    for word in words:
+        if query == word.lower():
+            flag += 1
+    if flag > 0:
+        print_title(chapter_name_underscore, count)
+
+
+def search_no_stopwords(chapter_name_underscore, count, query):
+    file_name_ST=os.path.abspath(f'collection_no_stopwords/{count}_{chapter_name_underscore}.txt')
+    with open(file_name_ST, 'r', encoding='utf-8') as file_st:
+        text = file_st.read()
+        words = text.split(' ')
+    flag = 0
+    for word in words:
+        if query == word.lower():
+            flag += 1
+    if flag > 0:
+        print_title(chapter_name_underscore, count)
+        
+
+def search_stemmed_form():
+    pass
     
 
 def search_collection(chapter_name,count,query, model, search_mode, documents, stemming):
@@ -60,46 +100,22 @@ def search_collection(chapter_name,count,query, model, search_mode, documents, s
     
     if stemming is True:
         obj_word = PorterStemmer()
+        #obj_word.stem(query)
         #print(obj_word.stem(query)) #code to test of function works or not.
+        if documents == 'original':
+            stemmed_query = obj_word.stem(query)
+            #print(stemmed_query)
+            search_original(chapter_name_underscore, count, stemmed_query)
     
-    
-    
-    if documents == 'original':
-        file_name=os.path.abspath(f'collection_original/{count}_{chapter_name_underscore}.txt')
-        with open(file_name, 'r', encoding = 'utf-8') as file_text:
-            text = file_text.read()
-            text = text.replace('"', '')
-            text = text.replace('\n', ' ')
-            text = text.replace(',', '')
-            text = text.replace('.', '')
-            text = text.replace(';', '')
-            text = text.replace(':', '')
-            text = text.replace('?', '')
-            text = text.replace('!', '')
-            words = text.split(' ')
-        flag = 0
-        for word in words:
-            if query == word.lower():
-                flag += 1
-        if flag > 0:
-            to_print = f'{count}_{chapter_name_underscore}.txt'
-            print(to_print, file=sys.stdout)
-    
+        elif documents == 'no_stopwords':
+            search_no_stopwords(chapter_name_underscore, count, query)
         
-        
-    elif documents == 'no_stopwords':
-        file_name_ST=os.path.abspath(f'collection_no_stopwords/{count}_{chapter_name_underscore}.txt')
-        with open(file_name_ST, 'r', encoding='utf-8') as file_st:
-            text = file_st.read()
-
-            words = text.split(' ')
-        flag = 0
-        for word in words:
-            if query == word.lower():
-                flag += 1
-        if flag > 0:
-            to_print = f'{count}_{chapter_name_underscore}.txt'
-            print(to_print, file=sys.stdout)
+    else:    
+        if documents == 'original':
+            search_original(chapter_name_underscore, count, query)
+    
+        elif documents == 'no_stopwords':
+            search_no_stopwords(chapter_name_underscore, count, query)
     
 
 if __name__ == '__main__':
