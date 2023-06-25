@@ -64,7 +64,7 @@ def print_title(chapter_name_underscore, count):
     print(to_print, file=sys.stdout)
         
 
-def search_original(chapter_name_underscore, count, query):
+def linear_search_original(chapter_name_underscore, count, query):
     file_name=os.path.abspath(f'collection_original/{count}_{chapter_name_underscore}.txt')
     text = cleaning_text(file_name)
     words = text.split(' ')
@@ -76,7 +76,7 @@ def search_original(chapter_name_underscore, count, query):
         print_title(chapter_name_underscore, count)
 
 
-def search_no_stopwords(chapter_name_underscore, count, query):
+def linear_search_no_stopwords(chapter_name_underscore, count, query):
     file_name_ST=os.path.abspath(f'collection_no_stopwords/{count}_{chapter_name_underscore}.txt')
     with open(file_name_ST, 'r', encoding='utf-8') as file_st:
         text = file_st.read()
@@ -89,7 +89,7 @@ def search_no_stopwords(chapter_name_underscore, count, query):
         print_title(chapter_name_underscore, count)
         
 
-def search_stemmed_form_original(chapter_name_underscore, count, query, obj_word):
+def linear_search_stemmed_form_original(chapter_name_underscore, count, query, obj_word):
     file_name=os.path.abspath(f'collection_original/{count}_{chapter_name_underscore}.txt')
     text = cleaning_text(file_name)
     words = text.split(' ')
@@ -102,7 +102,7 @@ def search_stemmed_form_original(chapter_name_underscore, count, query, obj_word
         print_title(chapter_name_underscore, count)
 
 
-def search_stemmed_form_no_stopwords(chapter_name_underscore, count, query, obj_word):
+def linear_search_stemmed_form_no_stopwords(chapter_name_underscore, count, query, obj_word):
     file_name_ST=os.path.abspath(f'collection_no_stopwords/{count}_{chapter_name_underscore}.txt')
     with open(file_name_ST, 'r', encoding='utf-8') as file_st:
         text = file_st.read()
@@ -116,7 +116,7 @@ def search_stemmed_form_no_stopwords(chapter_name_underscore, count, query, obj_
         print_title(chapter_name_underscore, count)
     
 
-def search_collection(chapter_name,count,query, model, search_mode, documents, stemming):
+def linear_search_collection(chapter_name,count,query, model, search_mode, documents, stemming):
     query = query.lower() #changes the query to lower case characters    
     chapter_name_underscore = chapter_name.replace(" ","_").lower().replace(',','').replace("'",'')  # Lower case as well as with underscore
     
@@ -128,17 +128,17 @@ def search_collection(chapter_name,count,query, model, search_mode, documents, s
         if documents == 'original':
             stemmed_query = obj_word.stem(query)
             #print(stemmed_query)
-            search_stemmed_form_original(chapter_name_underscore, count, stemmed_query, obj_word)
+            linear_search_stemmed_form_original(chapter_name_underscore, count, stemmed_query, obj_word)
     
         elif documents == 'no_stopwords':
-            search_stemmed_form_no_stopwords(chapter_name_underscore, count, stemmed_query, obj_word)
+            linear_search_stemmed_form_no_stopwords(chapter_name_underscore, count, stemmed_query, obj_word)
         
     else:    
         if documents == 'original':
-            search_original(chapter_name_underscore, count, query)
+            linear_search_original(chapter_name_underscore, count, query)
     
         elif documents == 'no_stopwords':
-            search_no_stopwords(chapter_name_underscore, count, query)
+            linear_search_no_stopwords(chapter_name_underscore, count, query)
     
 
 if __name__ == '__main__':
@@ -193,4 +193,4 @@ if __name__ == '__main__':
         extract_collection(chapters_text, chapters_list_final)
     if args.query is not None:
         for i in range(1,len(chapters_list_final)+1):
-            search_collection(chapters_list_final[i-1],str(i).zfill(2), query=args.query, model=args.model, search_mode=args.search_mode, documents=args.documents, stemming=args.stemming)
+            linear_search_collection(chapters_list_final[i-1],str(i).zfill(2), query=args.query, model=args.model, search_mode=args.search_mode, documents=args.documents, stemming=args.stemming)
