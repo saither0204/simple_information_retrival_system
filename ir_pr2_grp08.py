@@ -89,8 +89,31 @@ def search_no_stopwords(chapter_name_underscore, count, query):
         print_title(chapter_name_underscore, count)
         
 
-def search_stemmed_form():
-    pass
+def search_stemmed_form_original(chapter_name_underscore, count, query, obj_word):
+    file_name=os.path.abspath(f'collection_original/{count}_{chapter_name_underscore}.txt')
+    text = cleaning_text(file_name)
+    words = text.split(' ')
+    flag = 0
+    for word in words:
+        stemmed_word = obj_word.stem(word)
+        if query == stemmed_word.lower():
+            flag+=1
+    if flag > 0:
+        print_title(chapter_name_underscore, count)
+
+
+def search_stemmed_form_no_stopwords(chapter_name_underscore, count, query, obj_word):
+    file_name_ST=os.path.abspath(f'collection_no_stopwords/{count}_{chapter_name_underscore}.txt')
+    with open(file_name_ST, 'r', encoding='utf-8') as file_st:
+        text = file_st.read()
+        words = text.split(' ')
+    flag = 0
+    for word in words:
+        stemmed_word = obj_word.stem(word)
+        if query == stemmed_word.lower():
+            flag += 1
+    if flag > 0:
+        print_title(chapter_name_underscore, count)
     
 
 def search_collection(chapter_name,count,query, model, search_mode, documents, stemming):
@@ -105,10 +128,10 @@ def search_collection(chapter_name,count,query, model, search_mode, documents, s
         if documents == 'original':
             stemmed_query = obj_word.stem(query)
             #print(stemmed_query)
-            search_original(chapter_name_underscore, count, stemmed_query)
+            search_stemmed_form_original(chapter_name_underscore, count, stemmed_query, obj_word)
     
         elif documents == 'no_stopwords':
-            search_no_stopwords(chapter_name_underscore, count, query)
+            search_stemmed_form_no_stopwords(chapter_name_underscore, count, stemmed_query, obj_word)
         
     else:    
         if documents == 'original':
