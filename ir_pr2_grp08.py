@@ -116,7 +116,7 @@ def linear_search_stemmed_form_no_stopwords(chapter_name_underscore, count, quer
         print_title(chapter_name_underscore, count)
     
 
-def linear_search_collection(chapter_name,count,query, model, search_mode, documents, stemming):
+def linear_search_collection(chapter_name,count,query, model, documents, stemming):
     query = query.lower() #changes the query to lower case characters    
     chapter_name_underscore = chapter_name.replace(" ","_").lower().replace(',','').replace("'",'')  # Lower case as well as with underscore
     
@@ -192,5 +192,9 @@ if __name__ == '__main__':
     if args.extract_collection is not None:
         extract_collection(chapters_text, chapters_list_final)
     if args.query is not None:
-        for i in range(1,len(chapters_list_final)+1):
-            linear_search_collection(chapters_list_final[i-1],str(i).zfill(2), query=args.query, model=args.model, search_mode=args.search_mode, documents=args.documents, stemming=args.stemming)
+        if args.search_mode == 'linear':
+            for i in range(1,len(chapters_list_final)+1):
+                linear_search_collection(chapters_list_final[i-1],str(i).zfill(2), query=args.query, model=args.model, documents=args.documents, stemming=args.stemming)
+        elif args.search_mode == 'inverted':
+            for i in range(1,len(chapters_list_final)+1):
+                inverted_list_search(chapters_list_final[i-1],str(i).zfill(2), query=args.query, model=args.model, documents=args.documents, stemming=args.stemming)
