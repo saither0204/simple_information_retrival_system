@@ -226,8 +226,7 @@ if __name__ == '__main__':
         elif args.search_mode == 'inverted':
             unique = []
             for text in dict_titles_texts_st.values():
-                print(text)
-                break
+                #print(text)
                 text = cleaning_text(text)
                 words = text.split(" ")
                 for word in words:
@@ -237,5 +236,10 @@ if __name__ == '__main__':
     
             unique.remove('')
             unique.sort()
-            print(len(unique))
-            inverted_list_search( query=args.query, model=args.model, documents=args.documents, stemming=args.stemming)
+            print(unique)
+            
+            inverted_index = {}
+            
+            
+            #for word in unique:
+                #inverted_list_search(dict_titles_texts_st, query=args.query, model=args.model, documents=args.documents, stemming=args.stemming)
