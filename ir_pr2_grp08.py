@@ -18,18 +18,6 @@ def create_file_names_with_underscore(chapter_name, count):
     file_name = f'{count}_{chapter_name_underscore}.txt'
     return file_name
 
-# def cleaning_text(file_name):
-#     with open(file_name, 'r', encoding = 'utf-8') as file_text:
-#         text = file_text.read()
-#         text = text.replace('"', '')
-#         text = text.replace('\n', ' ')
-#         text = text.replace(',', '')
-#         text = text.replace('.', '')
-#         text = text.replace(';', '')
-#         text = text.replace(':', '')
-#         text = text.replace('?', '')
-#         text = text.replace('!', '')
-#     return text
 
 def cleaning_text(text):
     text = text.replace('"', '')
@@ -221,6 +209,9 @@ if __name__ == '__main__':
     dict_titles_texts_st = dict(zip(chapter_list_final_keys, chapters_text_values))
     for key in dict_titles_texts_st.keys():
         dict_titles_texts_st[key] = cleaning_text(dict_titles_texts_st[key])
+        
+    
+    inverted_list_index = {}
            
            
     
