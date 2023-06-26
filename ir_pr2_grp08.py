@@ -7,6 +7,51 @@ from collections import defaultdict
 from porterStemmer import PorterStemmer
 
 
+def precision(query, dict_gt, inverted_index):
+    temp_tot_relevant_docs = inverted_index[query]
+    tot_relevant_docs = []
+    for elem in temp_tot_relevant_docs:
+        var = elem[0:2]
+        if var[0] == '0':
+            var=var[1] 
+        tot_relevant_docs.append(var)
+    tot_relevant_docs = set(tot_relevant_docs)
+    all_retrieved_docs = set(dict_gt[query])
+    
+    relevant_retrieved_docs = all_retrieved_docs & tot_relevant_docs
+    relevant_retrieved_docs = list(relevant_retrieved_docs)
+    all_retrieved_docs = list(all_retrieved_docs)
+    
+    numer = len(relevant_retrieved_docs)
+    denom = len(all_retrieved_docs)
+    
+    precision_result = numer / denom
+    return precision_result
+
+def recall(query, dict_gt, inverted_index):
+    temp_tot_relevant_docs = inverted_index[query]
+    tot_relevant_docs = []
+    for elem in temp_tot_relevant_docs:
+        var = elem[0:2]
+        if var[0] == '0':
+            var=var[1] 
+        tot_relevant_docs.append(var)
+    tot_relevant_docs = set(tot_relevant_docs)
+    all_retrieved_docs = set(dict_gt[query])
+    
+    relevant_retrieved_docs = all_retrieved_docs & tot_relevant_docs
+    relevant_retrieved_docs = list(relevant_retrieved_docs)
+    all_retrieved_docs = list(all_retrieved_docs)
+    
+    numer = len(relevant_retrieved_docs)
+    denom = len(tot_relevant_docs)
+    
+    recall_result = numer / denom
+    return recall_result
+
+
+
+
 def second_search(text,str):
   list_1=[m.start() for m in re.finditer(fr'\b{str}\b',text)] #used fr to combine variable in the raw string
   if (str=='The Fisher'):
@@ -397,16 +442,18 @@ if __name__ == '__main__':
             unique = []
             for text in dict_titles_texts_st.values():
                 #print(text)
+                text = text.lower()
                 text = cleaning_text(text)
                 words = text.split(" ")
                 for word in words:
                 #print(word)
                     if word not in unique:
                         unique.append(word)
-    
+
             unique.remove('')
             unique.sort()
-            
+            # print(unique)
+            # print(len(unique))
             
             inverted_index = defaultdict(list)
             for i in range(0,len(unique)):
@@ -416,7 +463,55 @@ if __name__ == '__main__':
                         if unique[i].lower() == word.lower():
                             {inverted_index[unique[i].lower()].append(key)}
                             break
+                        
             start = time.time()
             inverted_list_search(chapter_list_final_keys, inverted_index, query=args.query, model=args.model, documents=args.documents, stemming=args.stemming)
             end = time.time()
-            print(f'T={(end - start)*1000} ms')
+            # print(f'T={(end - start)*1000} ms')
+            try:
+                ground_truth_path = os.path.abspath("ground_truth.txt")
+                with open(ground_truth_path, 'r') as gt:
+                    terms = gt.read()
+                    terms = terms.split('\n')
+                    var = []
+                    for i in terms:
+                        temp = i.split(' - ')
+                        var.append(temp)
+                    var = var[:6]
+
+                gt_keys = []
+                gt_values = []
+                for i in range(len(var)):
+                    gt_values.append((var[i][1]).split(", "))
+                    gt_keys.append(var[i][0])
+
+                dict_gt = dict(zip(gt_keys,gt_values))
+
+                recall_value = recall(args.query, dict_gt, inverted_index)
+                precision_value = precision(args.query, dict_gt,inverted_index)   
+                print(f'T={(end - start)*1000} ms,P = {precision_value},R = {recall_value}')         
+            
+            except KeyError:
+                print(f'T={(end - start)*1000} ms, P=?,R=?')         
+            
+        
+    # ground_truth_path = os.path.abspath("ground_truth.txt")
+    # with open(ground_truth_path, 'r') as gt:
+    #     terms = gt.read()
+    #     terms = terms.split('\n')
+    #     var = []
+    #     for i in terms:
+    #         temp = i.split(' - ')
+    #         var.append(temp)
+    #     var = var[:6]
+
+    # gt_keys = []
+    # gt_values = []
+    # for i in range(len(var)):
+    #     gt_values.append((var[i][1]).split(","))
+    #     gt_keys.append(var[i][0])
+
+    # dict_gt = dict(zip(gt_keys,gt_values))
+
+    # recall('animal', dict_gt, inverted_index)
+    # precision('animal', dict_gt,inverted_index)
