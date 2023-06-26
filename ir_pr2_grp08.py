@@ -2,6 +2,8 @@ import os
 import re
 import argparse
 import sys
+import itertools
+from collections import defaultdict
 from porterStemmer import PorterStemmer
 
 
@@ -119,20 +121,47 @@ def linear_search_collection(dict_titles_texts_original, dict_titles_texts_st, q
             linear_search_no_stopwords(dict_titles_texts_st = dict_titles_texts_st, query = query)
 
 
-def inverted_list_search(chapter_name,count,query, model, documents, stemming):
+def inverted_list_search(chapter_keys, inverted_index, query, model, documents, stemming):
     query = query.lower() #changes the query to lower case characters
-    chapter_name_underscore = chapter_name.replace(" ","_").lower().replace(',','').replace("'",'')  # Lower case as well as with underscore
     
     if query.__contains__('&'):
         query = query.split('&',2) #Now query is a list with 2 items [0,1]
-        
+        if query[0].lower() in inverted_index:
+            var1 = set(inverted_index[query[0]])
+            #print(var1)
+            if query[1].lower() in inverted_index:
+                var2 = set(inverted_index[query[1]])
+                var3 = var1 & var2
+                var3 = list(var3)
+                var3.sort()
+                for i in var3:
+                    print(i, file=sys.stdout)
+                
         
     elif query.__contains__('|'):
         query = query.split('|',2) #Now query is a list with 2 items [0,1]
+        if query[0].lower() in inverted_index:
+            var1 = inverted_index[query[0]]
+            #print(var1)
+            if query[1].lower() in inverted_index:
+                var2 = inverted_index[query[1]]
+                var3 = set(var1 + var2)
+                var3 = list(var3)
+                var3.sort()
+                for i in var3:
+                    print(i, file=sys.stdout)
         
-        
-    elif query.__contains__('!'):
-        query = query.strip('!') #Now query is a single word without the negation symbol '!'
+    elif query.__contains__('>'):
+        query = query.strip('>') #Now query is a single word without the negation symbol '!'
+        var1 = set(chapter_keys)
+        if query.lower() in inverted_index:
+            var2 = set(inverted_index[query])
+            var3 = var1 ^ var2
+            var3 = list(var3)
+            var3.sort()
+            print(len(var3))
+            for i in var3:
+                print(i, file=sys.stdout)
         
     
     
@@ -236,10 +265,15 @@ if __name__ == '__main__':
     
             unique.remove('')
             unique.sort()
-            print(unique)
-            
-            inverted_index = {}
             
             
-            #for word in unique:
-                #inverted_list_search(dict_titles_texts_st, query=args.query, model=args.model, documents=args.documents, stemming=args.stemming)
+            inverted_index = defaultdict(list)
+            for i in range(0,len(unique)):
+                for key,value in dict_titles_texts_st.items():
+                    words = value.split(" ")
+                    for word in words:
+                        if unique[i].lower() == word.lower():
+                            {inverted_index[unique[i].lower()].append(key)}
+                            break
+            
+            inverted_list_search(chapter_list_final_keys, inverted_index, query=args.query, model=args.model, documents=args.documents, stemming=args.stemming)
