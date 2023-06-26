@@ -2,7 +2,7 @@ import os
 import re
 import argparse
 import sys
-import itertools
+import time
 from collections import defaultdict
 from porterStemmer import PorterStemmer
 
@@ -112,6 +112,7 @@ def linear_search_collection(dict_titles_texts_original, dict_titles_texts_st, q
             linear_search_stemmed_form_original(dict_titles_texts_original = dict_titles_texts_original, query = stemmed_query, obj_word = obj_word)
     
         elif documents == 'no_stopwords':
+            stemmed_query = obj_word.stem(query)
             linear_search_stemmed_form_no_stopwords(dict_titles_texts_st = dict_titles_texts_st, query = stemmed_query, obj_word = obj_word)
         
     else:    
@@ -123,6 +124,8 @@ def linear_search_collection(dict_titles_texts_original, dict_titles_texts_st, q
 
 def inverted_list_search(chapter_keys, inverted_index, query, model, documents, stemming):
     query = query.lower() #changes the query to lower case characters
+    obj_inverted = PorterStemmer()
+    
     
     if query.__contains__('&'):
         query = query.split('&',2) #Now query is a list with 2 items [0,1]
@@ -161,6 +164,13 @@ def inverted_list_search(chapter_keys, inverted_index, query, model, documents, 
             var3.sort()
             print(len(var3))
             for i in var3:
+                print(i, file=sys.stdout)
+    
+    else:
+        if query.lower() in inverted_index:
+            var1 = inverted_index[query]
+            var1.sort()
+            for i in var1:
                 print(i, file=sys.stdout)
         
     
@@ -251,7 +261,10 @@ if __name__ == '__main__':
         extract_collection(dict_titles_texts_original= dict_titles_texts_original, dict_titles_texts_st = dict_titles_texts_st)
     if args.query is not None:
         if args.search_mode == 'linear':
+            start = time.time()
             linear_search_collection(dict_titles_texts_original= dict_titles_texts_original, dict_titles_texts_st = dict_titles_texts_st, query=args.query, model=args.model, documents=args.documents, stemming=args.stemming)
+            end = time.time()
+            print(f'T={(end - start)*1000} ms')
         elif args.search_mode == 'inverted':
             unique = []
             for text in dict_titles_texts_st.values():
@@ -275,5 +288,7 @@ if __name__ == '__main__':
                         if unique[i].lower() == word.lower():
                             {inverted_index[unique[i].lower()].append(key)}
                             break
-            
+            start = time.time()
             inverted_list_search(chapter_list_final_keys, inverted_index, query=args.query, model=args.model, documents=args.documents, stemming=args.stemming)
+            end = time.time()
+            print(f'T={(end - start)*1000} ms')
