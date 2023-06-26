@@ -37,24 +37,12 @@ def extract_collection(dict_titles_texts_original, dict_titles_texts_st):
         file_name=os.path.abspath(f'collection_original/{title}')
         with open(file_name, 'w', encoding='utf-8') as file:
             file.write(text)
-    
-    ST_file_path = os.path.abspath("englishST.txt")
-    with open(ST_file_path, 'r') as f:
-        st_text = f.read()
-        stop_words = st_text.split('\n')
-        stop_words = stop_words[:-1]#Removing last line of englishST.txt as it is a blank
-        
+            
     for title, text in dict_titles_texts_st.items():
         file_name_ST=os.path.abspath(f'collection_no_stopwords/{title}')
-        words = text.split(' ')
-        filtered_words = []
-        for word in words:    
-            if word.lower() not in stop_words:
-                filtered_words.append(word)
-        s = ' '.join(filtered_words)
         with open(file_name_ST, 'w', encoding='utf-8') as file_st:
-            file_st.write(s)
-        
+            file_st.write(text)       
+            
         
 def print_title(chapter_name_underscore, count):
     to_print = f'{count}_{chapter_name_underscore}.txt'
@@ -198,6 +186,12 @@ if __name__ == '__main__':
             end_index=second_search(text,chapters_list_final[i+1])-6 # to remove 4 time /n + 2 times /s
             chapters_text.append(text[start_index:end_index])
     
+    ST_file_path = os.path.abspath("englishST.txt")
+    with open(ST_file_path, 'r') as f:
+        st_text = f.read()
+        stop_words = st_text.split('\n')
+        stop_words = stop_words[:-1]#Removing last line of englishST.txt as it is a blank
+    
     chapter_list_final_keys = [] # will contain Chapters names in required format
     chapters_text_values = chapters_text
     for i in range(1,len(chapters_list_final)+1):
@@ -209,11 +203,20 @@ if __name__ == '__main__':
     dict_titles_texts_st = dict(zip(chapter_list_final_keys, chapters_text_values))
     for key in dict_titles_texts_st.keys():
         dict_titles_texts_st[key] = cleaning_text(dict_titles_texts_st[key])
-        
+        words = dict_titles_texts_st[key].split(' ')
+        filtered_words = []
+        for word in words:    
+            if word.lower() not in stop_words:
+                filtered_words.append(word)
+        s = ' '.join(filtered_words)
+        dict_titles_texts_st[key] = s
     
-    inverted_list_index = {}
-           
-           
+    
+    # for i in range(len(chapter_list_final_keys)):
+        
+    #     inverted_list_index = dict(zip(unique, ))
+    
+    
     
     if args.extract_collection is not None:
         extract_collection(dict_titles_texts_original= dict_titles_texts_original, dict_titles_texts_st = dict_titles_texts_st)
@@ -221,5 +224,18 @@ if __name__ == '__main__':
         if args.search_mode == 'linear':
             linear_search_collection(dict_titles_texts_original= dict_titles_texts_original, dict_titles_texts_st = dict_titles_texts_st, query=args.query, model=args.model, documents=args.documents, stemming=args.stemming)
         elif args.search_mode == 'inverted':
-            for i in range(1,len(chapters_list_final)+1):
-                inverted_list_search(chapters_list_final[i-1],str(i).zfill(2), query=args.query, model=args.model, documents=args.documents, stemming=args.stemming)
+            unique = []
+            for text in dict_titles_texts_st.values():
+                print(text)
+                break
+                text = cleaning_text(text)
+                words = text.split(" ")
+                for word in words:
+                #print(word)
+                    if word not in unique:
+                        unique.append(word)
+    
+            unique.remove('')
+            unique.sort()
+            print(len(unique))
+            inverted_list_search( query=args.query, model=args.model, documents=args.documents, stemming=args.stemming)

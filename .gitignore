@@ -161,3 +161,4 @@ cython_debug/
 porterStemmer.py
 collection_original/
 collection_no_stopwords/
+.vscode/
