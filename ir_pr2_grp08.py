@@ -52,74 +52,208 @@ def print_title(chapter_name_underscore, count):
         
 
 def linear_search_original(dict_titles_texts_original, query):
+    title_list = []
     for title, text in dict_titles_texts_original.items():
         text = cleaning_text(text)
         words = text.split(' ')
-        flag = 0
         for word in words:
             if query == word.lower():
-                flag += 1
-        if flag > 0:
-            print(title, file=sys.stdout)
+                title_list.append(title)
+                break
+    return title_list
 
 
 def linear_search_no_stopwords(dict_titles_texts_st, query):
+    title_list = []
     for title, text in dict_titles_texts_st.items():
         words = text.split(' ')
-        flag = 0
         for word in words:
             if query == word.lower():
-                flag += 1
-        if flag > 0:
-            print(title, file=sys.stdout)
+                title_list.append(title)
+                break
+    return title_list
         
 
 def linear_search_stemmed_form_original(dict_titles_texts_original,  query, obj_word):
+    title_list = []
+    stemmed_query = obj_word.stem(query)
     for title, text in dict_titles_texts_original.items():
         text = cleaning_text(text)
         words = text.split(' ')
-        flag = 0
         for word in words:
             stemmed_word = obj_word.stem(word)
-            if query == stemmed_word.lower():
-                flag+=1
-        if flag > 0:
-            print(title, file=sys.stdout)
+            if stemmed_query == stemmed_word.lower():
+                title_list.append(title)
+                break
+    return title_list
 
 
 def linear_search_stemmed_form_no_stopwords(dict_titles_texts_st, query, obj_word):
+    title_list = []
+    stemmed_query = obj_word.stem(query)
     for title, text in dict_titles_texts_st.items():
         words = text.split(' ')
-        flag = 0
         for word in words:
             stemmed_word = obj_word.stem(word)
-            if query == stemmed_word.lower():
-                flag += 1
-        if flag > 0:
-            print(title, file=sys.stdout)
+            if stemmed_query == stemmed_word.lower():
+                title_list.append(title)
+                break
+    return title_list
     
 
-def linear_search_collection(dict_titles_texts_original, dict_titles_texts_st, query, model, documents, stemming):
+def linear_search_collection(chapter_titles, dict_titles_texts_original, dict_titles_texts_st, query, model, documents, stemming):
     query = query.lower() #changes the query to lower case characters    
+    obj_word = PorterStemmer()
     
-    if stemming is True:
-        obj_word = PorterStemmer()
-        #obj_word.stem(query)
-        #print(obj_word.stem(query)) #code to test of function works or not.
-        if documents == 'original':
-            stemmed_query = obj_word.stem(query)
-            #print(stemmed_query)
-            linear_search_stemmed_form_original(dict_titles_texts_original = dict_titles_texts_original, query = stemmed_query, obj_word = obj_word)
     
-        elif documents == 'no_stopwords':
-            stemmed_query = obj_word.stem(query)
-            linear_search_stemmed_form_no_stopwords(dict_titles_texts_st = dict_titles_texts_st, query = stemmed_query, obj_word = obj_word)
+    if query.__contains__('&'):
+        query = query.split('&',2) #Now query is a list with 2 items [0,1]
         
-    else:    
-        if documents == 'original':
-            linear_search_original(dict_titles_texts_original = dict_titles_texts_original, query = query)
-        elif documents == 'no_stopwords':
-            linear_search_no_stopwords(dict_titles_texts_st = dict_titles_texts_st, query = query)
+        if stemming is True:
+            if documents == 'original':
+                var1 = set(linear_search_stemmed_form_original(dict_titles_texts_original = dict_titles_texts_original, query = query[0], obj_word = obj_word))
+                var2 = set(linear_search_stemmed_form_original(dict_titles_texts_original = dict_titles_texts_original, query = query[1], obj_word = obj_word))
+                var3 = var1 & var2
+                var3 = list(var3)
+                var3.sort()
+                for i in var3:
+                    print(i, file=sys.stdout)
+                
+        
+            elif documents == 'no_stopwords':        
+                var1 = set(linear_search_stemmed_form_no_stopwords(dict_titles_texts_st = dict_titles_texts_st, query = query[0], obj_word = obj_word))
+                var2 = set(linear_search_stemmed_form_no_stopwords(dict_titles_texts_st = dict_titles_texts_st, query = query[1], obj_word = obj_word))
+                var3 = var1 & var2
+                var3 = list(var3)
+                var3.sort()
+                for i in var3:
+                    print(i, file=sys.stdout)
+            
+        else:    
+            if documents == 'original':
+                var1 = set(linear_search_original(dict_titles_texts_original = dict_titles_texts_original, query = query[0]))
+                var2 = set(linear_search_original(dict_titles_texts_original = dict_titles_texts_original, query = query[1]))
+                var3 = var1 & var2
+                var3 = list(var3)
+                var3.sort()
+                for i in var3:
+                    print(i, file=sys.stdout)
+                    
+            elif documents == 'no_stopwords':
+                linear_search_no_stopwords(dict_titles_texts_st = dict_titles_texts_st, query = query)
+                var1 = set(linear_search_no_stopwords(dict_titles_texts_st = dict_titles_texts_st, query = query[0]))
+                var2 = set(linear_search_no_stopwords(dict_titles_texts_st = dict_titles_texts_st, query = query[1]))
+                var3 = var1 & var2
+                var3 = list(var3)
+                var3.sort()
+                for i in var3:
+                    print(i, file=sys.stdout)
+        
+    elif query.__contains__('|'):
+        query = query.split('|',2) #Now query is a list with 2 items [0,1]
+        
+        if stemming is True:
+            if documents == 'original':
+                var1 = linear_search_stemmed_form_original(dict_titles_texts_original = dict_titles_texts_original, query = query[0], obj_word = obj_word)
+                var2 = linear_search_stemmed_form_original(dict_titles_texts_original = dict_titles_texts_original, query = query[1], obj_word = obj_word)
+                var3 = var1 + var2
+                var3 = list(var3)
+                var3.sort()
+                for i in var3:
+                    print(i, file=sys.stdout)
+                
+        
+            elif documents == 'no_stopwords':        
+                var1 = linear_search_stemmed_form_no_stopwords(dict_titles_texts_st = dict_titles_texts_st, query = query[0], obj_word = obj_word)
+                var2 = linear_search_stemmed_form_no_stopwords(dict_titles_texts_st = dict_titles_texts_st, query = query[1], obj_word = obj_word)
+                var3 = var1 + var2
+                var3 = list(var3)
+                var3.sort()
+                for i in var3:
+                    print(i, file=sys.stdout)
+            
+        else:    
+            if documents == 'original':
+                var1 = linear_search_original(dict_titles_texts_original = dict_titles_texts_original, query = query[0])
+                var2 = linear_search_original(dict_titles_texts_original = dict_titles_texts_original, query = query[1])
+                var3 = var1 + var2
+                var3 = list(var3)
+                var3.sort()
+                for i in var3:
+                    print(i, file=sys.stdout)
+                    
+            elif documents == 'no_stopwords':
+                linear_search_no_stopwords(dict_titles_texts_st = dict_titles_texts_st, query = query)
+                var1 = linear_search_no_stopwords(dict_titles_texts_st = dict_titles_texts_st, query = query[0])
+                var2 = linear_search_no_stopwords(dict_titles_texts_st = dict_titles_texts_st, query = query[1])
+                var3 = var1 + var2
+                var3 = list(var3)
+                var3.sort()
+                for i in var3:
+                    print(i, file=sys.stdout)
+        
+    elif query.__contains__('>'):
+        query = query.strip('>') #Now query is a single word without the negation symbol '>'
+        var2 = set(chapter_titles)
+        if stemming is True:
+            if documents == 'original':
+                var1 = set(linear_search_stemmed_form_original(dict_titles_texts_original = dict_titles_texts_original, query = query, obj_word = obj_word))
+                var3 = var2 ^ var1
+                var3 = list(var3)
+                var3.sort()
+                for i in var3:
+                    print(i, file=sys.stdout)
+                
+        
+            elif documents == 'no_stopwords':        
+                var1 = set(linear_search_stemmed_form_no_stopwords(dict_titles_texts_st = dict_titles_texts_st, query = query, obj_word = obj_word))
+                var3 = var2 ^ var1
+                var3 = list(var3)
+                var3.sort()
+                for i in var3:
+                    print(i, file=sys.stdout)
+            
+        else:    
+            if documents == 'original':
+                var1 = set(linear_search_original(dict_titles_texts_original = dict_titles_texts_original, query = query))
+                var3 = var2 ^ var1
+                var3 = list(var3)
+                var3.sort()
+                for i in var3:
+                    print(i, file=sys.stdout)
+                    
+            elif documents == 'no_stopwords':
+                linear_search_no_stopwords(dict_titles_texts_st = dict_titles_texts_st, query = query)
+                var1 = set(linear_search_no_stopwords(dict_titles_texts_st = dict_titles_texts_st, query = query))
+                var3 = var2 ^ var1
+                var3 = list(var3)
+                var3.sort()
+                for i in var3:
+                    print(i, file=sys.stdout)
+        
+    else:
+        if stemming is True:
+            #obj_word.stem(query)
+            #print(obj_word.stem(query)) #code to test of function works or not.
+            if documents == 'original':
+                var1 = linear_search_stemmed_form_original(dict_titles_texts_original = dict_titles_texts_original, query = query, obj_word = obj_word)
+                for i in var1:
+                    print(i, file=sys.stdout)
+        
+            elif documents == 'no_stopwords':
+                var1 = linear_search_stemmed_form_no_stopwords(dict_titles_texts_st = dict_titles_texts_st, query = query, obj_word = obj_word)
+                for i in var1:
+                    print(i, file=sys.stdout)
+            
+        else:    
+            if documents == 'original':
+                var1 = linear_search_original(dict_titles_texts_original = dict_titles_texts_original, query = query)
+                for i in var1:
+                    print(i, file=sys.stdout)
+            elif documents == 'no_stopwords':
+                var1 = linear_search_no_stopwords(dict_titles_texts_st = dict_titles_texts_st, query = query)
+                for i in var1:
+                    print(i, file=sys.stdout)
 
 
 def inverted_list_search(chapter_keys, inverted_index, query, model, documents, stemming):
@@ -155,7 +289,7 @@ def inverted_list_search(chapter_keys, inverted_index, query, model, documents, 
                     print(i, file=sys.stdout)
         
     elif query.__contains__('>'):
-        query = query.strip('>') #Now query is a single word without the negation symbol '!'
+        query = query.strip('>') #Now query is a single word without the negation symbol '>'
         var1 = set(chapter_keys)
         if query.lower() in inverted_index:
             var2 = set(inverted_index[query])
@@ -251,18 +385,12 @@ if __name__ == '__main__':
         dict_titles_texts_st[key] = s
     
     
-    # for i in range(len(chapter_list_final_keys)):
-        
-    #     inverted_list_index = dict(zip(unique, ))
-    
-    
-    
     if args.extract_collection is not None:
         extract_collection(dict_titles_texts_original= dict_titles_texts_original, dict_titles_texts_st = dict_titles_texts_st)
     if args.query is not None:
         if args.search_mode == 'linear':
             start = time.time()
-            linear_search_collection(dict_titles_texts_original= dict_titles_texts_original, dict_titles_texts_st = dict_titles_texts_st, query=args.query, model=args.model, documents=args.documents, stemming=args.stemming)
+            linear_search_collection(chapter_titles = chapter_list_final_keys, dict_titles_texts_original= dict_titles_texts_original, dict_titles_texts_st = dict_titles_texts_st, query=args.query, model=args.model, documents=args.documents, stemming=args.stemming)
             end = time.time()
             print(f'T={(end - start)*1000} ms')
         elif args.search_mode == 'inverted':
