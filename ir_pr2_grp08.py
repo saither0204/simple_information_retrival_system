@@ -13,6 +13,11 @@ def second_search(text,str):
     return list_1[1]
 
 
+def create_file_names_with_underscore(chapter_name, count):
+    chapter_name_underscore= chapter_name.replace(" ","_").lower().replace(',','').replace("'",'')
+    file_name = f'{count}_{chapter_name_underscore}.txt'
+    return file_name
+
 def cleaning_text(file_name):
     with open(file_name, 'r', encoding = 'utf-8') as file_text:
         text = file_text.read()
@@ -28,13 +33,12 @@ def cleaning_text(file_name):
 
 
 def create_file(data, chapter_name,count):
-    ST_file_path = os.path.abspath("englishST.txt")
-    
     chapter_name_underscore= chapter_name.replace(" ","_").lower().replace(',','').replace("'",'')  # Lower case as well as with underscore
     file_name=os.path.abspath(f'collection_original/{count}_{chapter_name_underscore}.txt')
     with open(file_name, 'w', encoding='utf-8') as file:
         file.write(data)
     
+    ST_file_path = os.path.abspath("englishST.txt")
     file_name_ST=os.path.abspath(f'collection_no_stopwords/{count}_{chapter_name_underscore}.txt')
     with open(ST_file_path, 'r') as f:
         st_text = f.read()
@@ -139,6 +143,25 @@ def linear_search_collection(chapter_name,count,query, model, documents, stemmin
     
         elif documents == 'no_stopwords':
             linear_search_no_stopwords(chapter_name_underscore, count, query)
+
+
+def inverted_list_search(chapter_name,count,query, model, documents, stemming):
+    query = query.lower() #changes the query to lower case characters
+    chapter_name_underscore = chapter_name.replace(" ","_").lower().replace(',','').replace("'",'')  # Lower case as well as with underscore
+    
+    if query.__contains__('&'):
+        query = query.split('&',2) #Now query is a list with 2 items [0,1]
+        
+        
+    elif query.__contains__('|'):
+        query = query.split('|',2) #Now query is a list with 2 items [0,1]
+        
+        
+    elif query.__contains__('!'):
+        query = query.strip('!') #Now query is a single word without the negation symbol '!'
+        
+    
+    
     
 
 if __name__ == '__main__':
@@ -188,6 +211,21 @@ if __name__ == '__main__':
         elif i<len(chapters_list_final):
             end_index=second_search(text,chapters_list_final[i+1])-6 # to remove 4 time /n + 2 times /s
             chapters_text.append(text[start_index:end_index])
+    
+    chapter_list_final_keys = [] # will contain Chapters names in required format
+    chapters_text_values = chapters_text
+    for i in range(1,len(chapters_list_final)+1):
+        chapter_list_final_keys.append(create_file_names_with_underscore(chapters_list_final[i-1],str(i).zfill(2)))
+    #print(chapter_list_with_required_titles[0:5])
+    
+    dict_title_text = {}
+    for key in chapter_list_final_keys:
+        for value in chapters_text_values:
+            dict_title_text[key] = value
+
+    print(str(dict_title_text))
+    
+    
     
     if args.extract_collection is not None:
         extract_collection(chapters_text, chapters_list_final)
