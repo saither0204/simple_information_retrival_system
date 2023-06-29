@@ -4,7 +4,6 @@ import argparse
 import sys
 import time
 from collections import defaultdict
-from porterStemmer import PorterStemmer
 
 
 class PorterStemmer:
