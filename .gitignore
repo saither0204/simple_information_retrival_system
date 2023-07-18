@@ -162,3 +162,5 @@ porterStemmer.py
 collection_original/
 collection_no_stopwords/
 .vscode/
+Untitled.ipynb
+vec_space.py

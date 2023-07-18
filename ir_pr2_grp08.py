@@ -3,7 +3,9 @@ import re
 import argparse
 import sys
 import time
-from collections import defaultdict
+from collections import defaultdict, Counter
+import math
+
 
 
 class PorterStemmer:
@@ -469,6 +471,8 @@ def create_file_names_with_underscore(chapter_name, count):
 
 def cleaning_text(text):
     text = text.replace('"', '')
+    text = text.replace("  "," ")
+    text = text.replace('\n\n', ' ')
     text = text.replace('\n', ' ')
     text = text.replace(',', '')
     text = text.replace('.', '')
@@ -752,8 +756,95 @@ def inverted_list_search(chapter_keys, inverted_index, query, model, documents, 
             for i in var1:
                 print(i, file=sys.stdout)
         
+
+def corpus2dtm(tokenized_corpus, vocabulary):
+  document_term_matrix = []
+  for document in tokenized_corpus:
+        document_counts = Counter(document)
+        row = [document_counts[word] for word in vocabulary]
+        document_term_matrix.append(row)
+  return document_term_matrix
+
+def queryToDtm(query_tokenized, vocabulary):
+    queryVector = []
+    queryCounts = Counter(query_tokenized)
+    row = [queryCounts[word] for word in vocabulary]
+    queryVector = row
+    return queryVector
+
+def termFreqCalc(document_term_matrix):
+    term_frequency = []
+    document_term = list(map(list, zip(*document_term_matrix)))
+    for i in document_term:
+        term_frequency.append(sum(i))
+    return term_frequency
     
+
+def queryWeightCalc(query_vector, term_frequency, No_of_Docs):
+    max_tf = max(query_vector)
     
+    weight_vector = []
+    for i in range(len(query_vector)):
+        if query_vector[i] == 0:
+            weight_vector.append(0)
+        else:
+            log_value=math.log((No_of_Docs)/term_frequency[i])
+            weight=(0.5+((0.5*query_vector[i])/max_tf))*log_value
+            weight_vector.append(weight)
+    return weight_vector
+
+
+def termWeightCalc(term_frequency, No_of_Docs, document_term_matrix):
+    tf_matrix = []
+    idf_matrix = []
+    for i in range(len(term_frequency)):
+        tf_matrix.append((No_of_Docs)/term_frequency[i])
+        idf_matrix.append(math.log((No_of_Docs)/term_frequency[i]))
+    for i in range(len(document_term_matrix)):
+        for j in range(len(document_term_matrix[i])):
+            document_term_matrix[i][j] = document_term_matrix[i][j] * idf_matrix[j]
+    
+    return document_term_matrix
+
+
+def doc_magnitude(document_weight_vector):
+  doc_magnitude=[]
+  temp_magnitude=0
+  for document in document_weight_vector:
+    for value in document:
+      temp_magnitude=temp_magnitude+(value*value)
+    temp_magnitude=math.sqrt(temp_magnitude)
+    doc_magnitude.append(temp_magnitude)
+    temp_magniude=0
+  return doc_magnitude
+
+
+def query_magnitude(query_weight_vector):
+  query_magnitude=0
+  for value in query_weight_vector:
+    query_magnitude=query_magnitude+(value*value)
+  query_magnitude=math.sqrt(query_magnitude)
+  return query_magnitude
+
+
+def dot_prod(document_weight_vector,query_weight_vector):
+  dot_prod_vector=[]
+  for i in range(len(document_weight_vector)):
+    value=0
+    for j in range(len(document_weight_vector[i])):
+      value= value + (document_weight_vector[i][j]*query_weight_vector[j])
+    dot_prod_vector.append(value)
+  return dot_prod_vector
+
+
+def top_docs(dot_prod_matrix,query_magnitude,doc_magnitude_vector):
+  topDocs=[]
+  value=0
+  for i in range(len(dot_prod_matrix)):
+    value=dot_prod_matrix[i]/(doc_magnitude_vector[i]*query_magnitude)
+    topDocs.append(value)
+  topDocs = [i+1 for i, x in sorted(enumerate(topDocs), key=lambda x: x[1], reverse=True)]
+  return topDocs
     
 
 if __name__ == '__main__':
@@ -819,78 +910,146 @@ if __name__ == '__main__':
     dict_titles_texts_original = dict(zip(chapter_list_final_keys, chapters_text_values))
     
     dict_titles_texts_st = dict(zip(chapter_list_final_keys, chapters_text_values))
+    tokenized_documents = []
     for key in dict_titles_texts_st.keys():
         dict_titles_texts_st[key] = cleaning_text(dict_titles_texts_st[key])
         words = dict_titles_texts_st[key].split(' ')
         filtered_words = []
         for word in words:    
             if word.lower() not in stop_words:
-                filtered_words.append(word)
+                filtered_words.append(word.lower())
+        tokenized_documents.append(list(filtered_words))
         s = ' '.join(filtered_words)
         dict_titles_texts_st[key] = s
-    
     
     if args.extract_collection is not None:
         extract_collection(dict_titles_texts_original= dict_titles_texts_original, dict_titles_texts_st = dict_titles_texts_st)
     if args.query is not None:
-        if args.search_mode == 'linear':
-            start = time.time()
-            linear_search_collection(chapter_titles = chapter_list_final_keys, dict_titles_texts_original= dict_titles_texts_original, dict_titles_texts_st = dict_titles_texts_st, query=args.query, model=args.model, documents=args.documents, stemming=args.stemming)
-            end = time.time()
-            print(f'T={(end - start)*1000} ms')
-        elif args.search_mode == 'inverted':
-            unique = []
-            for text in dict_titles_texts_st.values():
+        if args.model == 'bool':
+            if args.search_mode == 'linear':
+                start = time.time()
+                linear_search_collection(chapter_titles = chapter_list_final_keys, dict_titles_texts_original= dict_titles_texts_original, dict_titles_texts_st = dict_titles_texts_st, query=args.query, model=args.model, documents=args.documents, stemming=args.stemming)
+                end = time.time()
+                print(f'T={(end - start)*1000} ms')
+            elif args.search_mode == 'inverted':
+                unique = []
+                for text in dict_titles_texts_st.values():
 
-                text = text.lower()
-                text = cleaning_text(text)
-                words = text.split(" ")
-                for word in words:
-
-                    if word not in unique:
-                        unique.append(word)
-
-            unique.remove('')
-            unique.sort()
-
-
-            inverted_index = defaultdict(list)
-            for i in range(0,len(unique)):
-                for key,value in dict_titles_texts_st.items():
-                    words = value.split(" ")
+                    text = text.lower()
+                    text = cleaning_text(text)
+                    words = text.split(" ")
                     for word in words:
-                        if unique[i].lower() == word.lower():
-                            {inverted_index[unique[i].lower()].append(key)}
-                            break
-                        
-            start = time.time()
-            inverted_list_search(chapter_list_final_keys, inverted_index, query=args.query, model=args.model, documents=args.documents, stemming=args.stemming)
-            end = time.time()
-            
+
+                        if word not in unique:
+                            unique.append(word)
+
+                unique.remove('')
+                unique.sort()
+                query=args.query
+                if args.stemming and not(query.__contains__('&') or query.__contains__('|') or query.__contains__('>')):
+                    obj_word = PorterStemmer()
+                    query=obj_word.stem(query)
+                    for word in unique:
+                        temp=obj_word.stem(word)
+                        unique.append(word)     
+                
+                
+                inverted_index = defaultdict(list)
+                for i in range(0,len(unique)):
+                    for key,value in dict_titles_texts_st.items():
+                        words = value.split(" ")
+                        for word in words:
+                            if unique[i].lower() == word.lower():
+                                {inverted_index[unique[i].lower()].append(key)}
+                                break
+                    
+                start = time.time()
+                inverted_list_search(chapter_list_final_keys, inverted_index, query, model=args.model, documents=args.documents, stemming=args.stemming)
+                end = time.time()
+                
+                try:
+                    ground_truth_path = os.path.abspath("ground_truth.txt")
+                    with open(ground_truth_path, 'r') as gt:
+                        terms = gt.read()
+                        terms = terms.split('\n')
+                        var = []
+                        for i in terms:
+                            temp = i.split(' - ')
+                            var.append(temp)
+                        var = var[:6]
+
+                    gt_keys = []
+                    gt_values = []
+                    for i in range(len(var)):
+                        gt_values.append((var[i][1]).split(", "))
+                        gt_keys.append(var[i][0])
+                            
+                    temp_gt_values = gt_values
+                    temp_gt_keys = gt_keys
+                    
+                    dict_gt = dict(zip(gt_keys,gt_values))
+
+                    recall_value = recall(args.query, dict_gt, inverted_index)
+                    precision_value = precision(args.query, dict_gt,inverted_index)   
+                    print(f'T={(end - start)*1000} ms,P = {precision_value},R = {recall_value}')         
+                
+                except KeyError:
+                    print(f'T={(end - start)*1000} ms, P=?,R=?')
+            else:
+                print("\nSearch Mode Argument is missing\n")
+        
+        elif args.model == "vector":
             try:
-                ground_truth_path = os.path.abspath("ground_truth.txt")
-                with open(ground_truth_path, 'r') as gt:
-                    terms = gt.read()
-                    terms = terms.split('\n')
-                    var = []
-                    for i in terms:
-                        temp = i.split(' - ')
-                        var.append(temp)
-                    var = var[:6]
+                unique = []
+                for text in dict_titles_texts_st.values():
 
-                gt_keys = []
-                gt_values = []
-                for i in range(len(var)):
-                    gt_values.append((var[i][1]).split(", "))
-                    gt_keys.append(var[i][0])
+                    text = text.lower()
+                    text = cleaning_text(text)
+                    words = text.split(" ")
+                    for word in words:
 
-                dict_gt = dict(zip(gt_keys,gt_values))
+                        if word not in unique:
+                            unique.append(word)
 
-                recall_value = recall(args.query, dict_gt, inverted_index)
-                precision_value = precision(args.query, dict_gt,inverted_index)   
-                print(f'T={(end - start)*1000} ms,P = {precision_value},R = {recall_value}')         
+                unique.remove('')
+                unique.sort()
+                query = args.query
+                query = query.lower()
+                query_tokenized=list(query.split(" "))
+                if args.stemming:
+                    temp = []
+                    obj_word = PorterStemmer()
+                    for word in query_tokenized:
+                        temp.append(obj_word.stem(word))
+                    query_tokenized = temp
+                        
+                
+                
+                document_term_matrix = corpus2dtm(tokenized_documents, unique)
+                
+                queryVector = queryToDtm(query_tokenized, unique)
+                
+                term_frequency = termFreqCalc(document_term_matrix)
+                
+                query_weight_vector = queryWeightCalc(queryVector, term_frequency, len(chapter_list_final_keys))
+                
+                document_weight_vector = termWeightCalc(term_frequency, len(chapter_list_final_keys), document_term_matrix)
+                
+                doc_magnitude_vector = doc_magnitude(document_weight_vector)
+                
+                query_magnitude_value = query_magnitude(query_weight_vector)
+                
+                dot_prod_matrix = dot_prod(document_weight_vector, query_weight_vector)
+                
+                topDocs = top_docs(dot_prod_matrix, query_magnitude_value, doc_magnitude_vector)
+                start = time.time()
+                print(topDocs)
+                end = time.time()
+                print(f'T={(end - start)*1000} ms, P=?,R=?')
+            except NameError:
+                print("")
+        else:
+            print("\nModel Argument is missing\n") 
             
-            except KeyError:
-                print(f'T={(end - start)*1000} ms, P=?,R=?')         
             
         
