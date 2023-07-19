@@ -36,12 +36,12 @@ The system can be run from the command line using the following command to list 
 python simple_information_retrival.py --query "somesearchterm" --model "vector" --documents "original/no_stopwords"
 
 ```
-
+<!--
 ## Issues
 
 If your repository uses GitHub's issue tracking system, provide guidelines on how to report issues, how to submit feature requests, and how to contribute to issue discussions.
 
-<!--
+
 ## Changelog
 
 Include a changelog or release notes detailing the project's version history, changes, and updates.
