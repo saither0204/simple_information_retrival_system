@@ -403,13 +403,6 @@ class PorterStemmer:
         return word
     
 
-
-    
-
-
-
-
-
 def precision(query, dict_gt, inverted_index):
     temp_tot_relevant_docs = inverted_index[query]
     tot_relevant_docs = []
