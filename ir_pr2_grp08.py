@@ -424,6 +424,7 @@ def precision(query, dict_gt, inverted_index):
     precision_result = numer / denom
     return precision_result
 
+
 def recall(query, dict_gt, inverted_index):
     temp_tot_relevant_docs = inverted_index[query]
     tot_relevant_docs = []
@@ -444,8 +445,6 @@ def recall(query, dict_gt, inverted_index):
     
     recall_result = numer / denom
     return recall_result
-
-
 
 
 def second_search(text,str):
@@ -474,7 +473,6 @@ def cleaning_text(text):
     text = text.replace('?', '')
     text = text.replace('!', '')
     return text
-
 
 
 def extract_collection(dict_titles_texts_original, dict_titles_texts_st):
@@ -758,12 +756,14 @@ def corpus2dtm(tokenized_corpus, vocabulary):
         document_term_matrix.append(row)
   return document_term_matrix
 
+
 def queryToDtm(query_tokenized, vocabulary):
     queryVector = []
     queryCounts = Counter(query_tokenized)
     row = [queryCounts[word] for word in vocabulary]
     queryVector = row
     return queryVector
+
 
 def termFreqCalc(document_term_matrix):
     term_frequency = []
@@ -1047,6 +1047,3 @@ if __name__ == '__main__':
                 print("")
         else:
             print("\nModel Argument is missing\n") 
-            
-            
-        
