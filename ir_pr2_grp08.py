@@ -1040,11 +1040,15 @@ if __name__ == '__main__':
                 query_magnitude_value = query_magnitude(query_weight_vector)
                 
                 dot_prod_matrix = dot_prod(document_weight_vector, query_weight_vector)
-                
-                topDocs = top_docs(dot_prod_matrix, query_magnitude_value, doc_magnitude_vector)
                 start = time.time()
-                print(topDocs)
+                topDocs = top_docs(dot_prod_matrix, query_magnitude_value, doc_magnitude_vector)
                 end = time.time()
+                
+                topDocs_titles = []
+                for i in range(len(topDocs)):
+                    output = chapter_list_final_keys[topDocs[i]-1]
+                    print(output, file=sys.stdout)
+                
                 print(f'T={(end - start)*1000} ms, P=?,R=?')
             except NameError:
                 print("")
